@@ -1,4 +1,4 @@
-name:           feedmailer
+name:           fetwoma
 version:        0.1
 cabal-version:  >=1.2
 build-type:     Simple
@@ -9,7 +9,7 @@ copyright:      Andreas Pakulat <apaku@gmx.de>
 license:        BSD3
 license-file:   LICENSE
 
-executable feedmailer
+executable fetwoma
   hs-source-dirs:  src
   main-is:         Main.hs
   build-depends:   
