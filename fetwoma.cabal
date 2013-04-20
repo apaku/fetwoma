@@ -16,6 +16,7 @@ executable fetwoma
                    base >= 4,
                    download-curl,
                    feed,
-                   mime-mail
+                   mime-mail,
+                   text
   ghc-options:     -Wall
 

@@ -23,13 +23,29 @@
 -- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 -- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 module Main where
+
 import Network.Curl.Download
 import Text.Feed.Query
+import Text.Feed.Types
+import Network.Mail.Mime
+import qualified Data.Text.Lazy as L
+import qualified Data.Text as T
+import Data.Maybe
+
+getAddress :: String -> Address
+getAddress addr = Address {addressName = Nothing, addressEmail = T.pack addr}
+
+generateMailFromEntry :: Item -> IO Mail
+generateMailFromEntry entry = simpleMail (getAddress "andreas@localhost") (getAddress "fetwoma") (T.pack $ fromMaybe "" $ getItemTitle entry) (L.pack $ fromMaybe "" $ getItemDescription entry) (L.pack $ fromMaybe "" $ getItemDescription entry) []
 
 main::IO()
 main = do
-       feedurl <- getLine
-       downloaded <- openAsFeed feedurl
-       case downloaded of
-           Left err -> putStrLn err
-           Right feed -> putStrLn (getFeedTitle feed)
+    putStrLn "Feed to fetch:"
+    feedurl <- getLine
+    downloaded <- openAsFeed feedurl
+    case downloaded of
+        Left err -> putStrLn err
+        Right feed -> do
+            mails <- mapM generateMailFromEntry (getFeedItems feed)
+            mailstr <- mapM renderMail' mails
+            print mailstr
