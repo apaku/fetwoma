@@ -49,7 +49,8 @@ generateMailHeadersFromFeedEntry :: Feed -> Item -> [(B.ByteString, T.Text)]
 generateMailHeadersFromFeedEntry feed entry = [(C8.pack "Subject", maybeAsText getItemTitle entry),
                                                (C8.pack "Date", maybeAsText getItemDate entry),
                                                (C8.pack "X-RSS-URL", maybeAsText getItemLink entry),
-                                               (C8.pack "X-RSS-Feed", maybeAsText getFeedHome feed),
+                                               (C8.pack "X-RSS-FeedHome", maybeAsText getFeedHome feed),
+                                               (C8.pack "X-RSS-FeedTitle", (T.pack . getFeedTitle) feed),
                                                (C8.pack "X-RSS-ID", T.pack $ snd $ fromMaybe (False,"") (getItemId entry))]
 
 createHtmlPart :: String -> Part
