@@ -34,8 +34,11 @@ import qualified Data.ByteString.Char8 as C8
 import qualified Data.ByteString.Lazy.Char8 as L8
 import Data.Maybe
 
-getAddress :: String -> Address
-getAddress addr = Address {addressName = Nothing, addressEmail = T.pack addr}
+justMailAddress :: String -> Address
+justMailAddress addr = Address {addressName = Nothing, addressEmail = T.pack addr}
+
+mailAddressAndName :: String -> String -> Address
+mailAddressAndName name email = Address {addressName = Just $ T.pack name, addressEmail = T.pack email}
 
 generateMailHeadersFromFeedEntry :: Feed -> Item -> [(B.ByteString, T.Text)]
 generateMailHeadersFromFeedEntry feed entry = [(C8.pack "Subject", T.pack $ fromMaybe "" (getItemTitle entry)),
@@ -50,9 +53,12 @@ createHtmlPart content = Part { partType = T.pack "text/html",
                                 partHeaders = [],
                                 partContent = L8.pack content }
 
+getFromName :: Feed -> Item -> String
+getFromName feed entry = unwords [getFeedTitle feed, fromMaybe "" (getItemAuthor entry)]
+
 generateMailFromEntry :: Feed -> Item -> Mail
-generateMailFromEntry feed entry = Mail {mailFrom = getAddress "andreas@localhost",
-                                         mailTo = [getAddress "fetwoma"],
+generateMailFromEntry feed entry = Mail {mailFrom = mailAddressAndName (getFromName feed entry) "fetwoma@localhost",
+                                         mailTo = [justMailAddress "andreas@localhost"],
                                          mailCc = [],
                                          mailBcc = [],
                                          mailHeaders = generateMailHeadersFromFeedEntry feed entry,
