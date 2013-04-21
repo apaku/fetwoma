@@ -40,10 +40,13 @@ justMailAddress addr = Address {addressName = Nothing, addressEmail = T.pack add
 mailAddressAndName :: String -> String -> Address
 mailAddressAndName name email = Address {addressName = Just $ T.pack name, addressEmail = T.pack email}
 
+maybeAsText :: (a -> Maybe String) -> a -> T.Text
+maybeAsText fn entry = T.pack $ fromMaybe "" $ fn entry
+
 generateMailHeadersFromFeedEntry :: Feed -> Item -> [(B.ByteString, T.Text)]
-generateMailHeadersFromFeedEntry feed entry = [(C8.pack "Subject", T.pack $ fromMaybe "" (getItemTitle entry)),
-                                               (C8.pack "X-RSS-URL", T.pack $ fromMaybe "" (getItemLink entry)),
-                                               (C8.pack "X-RSS-Feed", T.pack $ fromMaybe "" (getFeedHome feed)),
+generateMailHeadersFromFeedEntry feed entry = [(C8.pack "Subject", maybeAsText getItemTitle entry),
+                                               (C8.pack "X-RSS-URL", maybeAsText getItemLink entry),
+                                               (C8.pack "X-RSS-Feed", maybeAsText getFeedHome feed),
                                                (C8.pack "X-RSS-ID", T.pack $ snd $ fromMaybe (False,"") (getItemId entry))]
 
 createHtmlPart :: String -> Part
