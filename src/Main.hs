@@ -24,6 +24,7 @@
 -- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 module Main where
 
+import FeedDataStore
 import System.Environment
 import System.Exit
 import Network.Curl.Download
@@ -100,7 +101,9 @@ debug feedurl = do
             putStr $ concatMap (++ "\n\n------------------------------------\n\n") $ map L8.unpack mails
 
 add :: String -> IO ()
-add _ = putStrLn "Stored feed"
+add feed = case addFeed feed of
+    Nothing -> putStrLn "Feed added"
+    Just x -> (putStr . unlines) ["Error adding feed: ",x]
 
 main::IO()
 main = getArgs >>= parse
