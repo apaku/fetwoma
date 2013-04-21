@@ -24,6 +24,8 @@
 -- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 module Main where
 
+import System.Environment
+import System.Exit
 import Network.Curl.Download
 import Text.Feed.Query
 import Text.Feed.Types
@@ -67,14 +69,37 @@ generateMailFromEntry feed entry = Mail {mailFrom = mailAddressAndName (getFromN
                                          mailBcc = [],
                                          mailHeaders = generateMailHeadersFromFeedEntry feed entry,
                                          mailParts = [ [ createHtmlPart $ fromMaybe "" $ getItemDescription entry ] ]}
+parse :: [String] -> IO a
+parse ["-h"] = usage >> exit
+parse ["-v"] = version >> exit
+parse ["run"] = run >> exit
+parse ("add":y:_) = add y >> exit
+parse ("debug":y:_) = debug y >> exit
+parse _ = usage >> exit
 
-main::IO()
-main = do
-    putStrLn "Feed to fetch:"
-    feedurl <- getLine
+exit :: IO a
+exit = exitSuccess
+
+usage :: IO ()
+usage = putStrLn "Usage: fetwoma [-v|-h|run|add <feedurl>]"
+
+version :: IO ()
+version = putStrLn "fetwoma 0.0.1"
+
+run :: IO ()
+run = putStrLn "Running"
+
+debug :: String -> IO ()
+debug feedurl = do 
     downloaded <- openAsFeed feedurl
     case downloaded of
         Left err -> putStrLn err
         Right feed -> do
             mails <- mapM (renderMail' . generateMailFromEntry feed) (getFeedItems feed)
-            print mails
+            putStr $ concatMap (++ "\n\n------------------------------------\n\n") $ map L8.unpack mails
+
+add :: String -> IO ()
+add _ = putStrLn "Stored feed"
+
+main::IO()
+main = getArgs >>= parse
