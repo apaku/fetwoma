@@ -17,6 +17,7 @@ executable fetwoma
                    download-curl,
                    feed,
                    mime-mail,
-                   text
+                   text,
+                   bytestring
   ghc-options:     -Wall
 

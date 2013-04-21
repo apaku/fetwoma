@@ -28,15 +28,35 @@ import Network.Curl.Download
 import Text.Feed.Query
 import Text.Feed.Types
 import Network.Mail.Mime
-import qualified Data.Text.Lazy as L
 import qualified Data.Text as T
+import qualified Data.ByteString as B
+import qualified Data.ByteString.Char8 as C8
+import qualified Data.ByteString.Lazy.Char8 as L8
 import Data.Maybe
 
 getAddress :: String -> Address
 getAddress addr = Address {addressName = Nothing, addressEmail = T.pack addr}
 
-generateMailFromEntry :: Item -> IO Mail
-generateMailFromEntry entry = simpleMail (getAddress "andreas@localhost") (getAddress "fetwoma") (T.pack $ fromMaybe "" $ getItemTitle entry) (L.pack $ fromMaybe "" $ getItemDescription entry) (L.pack $ fromMaybe "" $ getItemDescription entry) []
+generateMailHeadersFromFeedEntry :: Feed -> Item -> [(B.ByteString, T.Text)]
+generateMailHeadersFromFeedEntry feed entry = [(C8.pack "Subject", T.pack $ fromMaybe "" (getItemTitle entry)),
+                                               (C8.pack "X-RSS-URL", T.pack $ fromMaybe "" (getItemLink entry)),
+                                               (C8.pack "X-RSS-Feed", T.pack $ fromMaybe "" (getFeedHome feed)),
+                                               (C8.pack "X-RSS-ID", T.pack $ snd $ fromMaybe (False,"") (getItemId entry))]
+
+createHtmlPart :: String -> Part
+createHtmlPart content = Part { partType = T.pack "text/html",
+                                partEncoding = QuotedPrintableText,
+                                partFilename = Nothing,
+                                partHeaders = [],
+                                partContent = L8.pack content }
+
+generateMailFromEntry :: Feed -> Item -> Mail
+generateMailFromEntry feed entry = Mail {mailFrom = getAddress "andreas@localhost",
+                                         mailTo = [getAddress "fetwoma"],
+                                         mailCc = [],
+                                         mailBcc = [],
+                                         mailHeaders = generateMailHeadersFromFeedEntry feed entry,
+                                         mailParts = [ [ createHtmlPart $ fromMaybe "" $ getItemDescription entry ] ]}
 
 main::IO()
 main = do
@@ -46,6 +66,5 @@ main = do
     case downloaded of
         Left err -> putStrLn err
         Right feed -> do
-            mails <- mapM generateMailFromEntry (getFeedItems feed)
-            mailstr <- mapM renderMail' mails
-            print mailstr
+            mails <- mapM (renderMail' . generateMailFromEntry feed) (getFeedItems feed)
+            print mails
